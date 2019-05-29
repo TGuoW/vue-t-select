@@ -6,6 +6,9 @@ const FOLD_FOCUS = 'FOLD_FOCUS'
 const UNFOLD_FOCUS = 'UNFOLD_FOCUS'
 
 const config = {
+    INITIAL (that) {
+        that.state = FOLD
+    },
     [UNFOLD_FOCUS]: {
         OUT (that) {
             that.state = FOLD
@@ -18,10 +21,11 @@ const config = {
         }
     },
     [FOLD]: {
-        IN (that) {
+        IN (that, func) {
             that.state = UNFOLD_FOCUS
             const eventListener = () => {
                 that.state = FOLD
+                typeof func === 'function' && func()
                 document.removeEventListener('click', eventListener)
             }
             document.addEventListener('click', eventListener)
@@ -44,77 +48,111 @@ export default {
         },
         value: {
             type: String,
-            // required: true,
+            required: true,
             default() {
                 return ''
             }
         },
         options: {
             type: Array,
+            required: true,
             default () {
-                return [
-                    {value: 'aaa', label: 'asdasd'},
-                    {value: 'aa6aa', label: 'asdasd1'},
-                    {value: 'aa3aa', label: 'asdasd1'},
-                    {value: 'a1aaa', label: 'asdasd1'},
-                    {value: 'aaa3a', label: 'asdasd1'},
-                    {value: 'aa51aa', label: 'asdasd1'},
-                    {value: 'aaa1a', label: 'asdasd1'},
-                    {value: 'aa23aa', label: 'asdasd1'},
-                    {value: 'aa4aa', label: 'asdasd1'},
-                    {value: 'a5aaa', label: 'asdasd1'},
-                    {value: 'aa4aa', label: 'asdasd1'},
-                    {value: 'aa5aa', label: 'asdasd1'},
-                    {value: 'aaaga', label: 'asdasd1'},
-                    {value: 'aaaqa', label: 'asdasd1'},
-                    {value: 'aasaaa', label: 'asdasd1'},
-                    {value: 'aavaa', label: 'asdasd1'},
-                    {value: 'aaaa', label: 'asdasd1'},
-                    {value: 'aahaa', label: 'asdasd1'},
-                    {value: 'aajaa', label: 'asdasd1'},
-                    {value: 'aabaa', label: 'asdasd1'},
-                    {value: 'aaaaa', label: 'asdasd12'}
-                ]
+                return []
+            }
+        },
+        clearable: {
+            type: Boolean,
+            default () {
+                return false
+            }
+        },
+        filterable: {
+            type: Boolean,
+            default () {
+                return false
             }
         }
     },
     data() {
         return {
+            displayOptions: this.options,
+            showClose: false,
             state: FOLD,
-            selected: {value: '', label: ''}
+            selected: {value: '', label: ''},
+            inputLabel: ''
         };
     },
     methods: {
         handleClick () {
-            config[this.state].IN(this)
-            event.stopImmediatePropagation()
+            const args = [
+                this,
+                this.state === FOLD ? () => {
+                    this.inputLabel = this.selected.label
+                    this.displayOptions = this.options
+                } : ''
+            ]
+            config[this.state].IN.apply(null, args)
+            event.stopPropagation()
         },
         selectItem (value) {
-            this.selected = value
             config[this.state].SELECT(this)
-            this.$emit('input', value.value)
-            this.$emit('change', value)
+            this.changeSelected(value)
             event.stopPropagation()
+        },
+        clearItem () {
+            config.INITIAL(this)
+            const item = {value: '', label: ''}
+            this.changeSelected(item)
+            this.displayOptions = this.options
+            event.stopPropagation()
+        },
+        changeSelected (item) {
+            this.selected = item
+            this.inputLabel = item.label
+            this.$emit('input', item.value)
+            this.$emit('change', item)
+        },
+        filterOptions (e) {
+            const value = e.target.value
+            this.inputLabel = value
+            this.displayOptions = this.options.filter(item => item.label.includes(value))
         }
     },
     render () {
-        const {selected, state, options} = this
+        const {selected, inputLabel, state, displayOptions, showClose, clearable, placeholder, filterable} = this
         return (
             <div class="vue-t-select-w">
                 <div
                     class={["vue-t-select", state.includes(FOCUS) ? 'vue-t-select-focus' : '']}
-                    onClick={this.handleClick}>
-                    <input type="text" value={selected.label} placeholder={this.placeholder} ref="input" readonly/>
+                    onClick={this.handleClick}
+                    onmouseover={() => {this.showClose = true}}
+                    onmouseout={() => {this.showClose = false}}>
+                    <input
+                        type="text"
+                        onInput={this.filterOptions}
+                        value={inputLabel}
+                        placeholder={placeholder}
+                        ref="input"
+                        readonly={!filterable}/>
+                    <span
+                        v-show={showClose && clearable}
+                        class="vue-t-select-close"
+                        onClick={() => this.clearItem()}></span>
                 </div>
-                <ul v-show={state.includes(UNFOLD)} class="vue-t-select-dropdown">
-                    { options.map(item =>
-                        <li
-                            class={[selected.value === item.value ? 'vue-t-select-highlight' : '']}
-                            onClick={() => this.selectItem(item)}>
-                            {item.label}
-                        </li>
-                    )}
-                </ul>
+                <transition name="vue-t-transition">
+                    {state.includes(UNFOLD) &&
+                        <ul class="vue-t-select-dropdown">
+                            { displayOptions.map(item =>
+                                <li
+                                    class={[selected.value === item.value ? 'vue-t-select-highlight' : '']}
+                                    onClick={() => this.selectItem(item)}>
+                                    {item.label}
+                                </li>
+                            )}
+                            { !displayOptions.length && <li>暂无数据</li> }
+                        </ul>
+                    }
+                </transition>
             </div>
         )
     }
@@ -122,9 +160,17 @@ export default {
 </script>
 
 <style scoped>
+    .vue-t-transition-enter-active, .vue-t-transition-leave-active {
+        transition: all .2s;
+    }
+    .vue-t-transition-enter, .vue-t-transition-leave-to {
+        transform-origin: 0% 0%;
+        transform: scale(1, 0);
+        opacity: 0;
+    }
+
     .vue-t-select-w {
         position: relative;
-        margin: 25px auto;
         width: 240px;
     }
     .vue-t-select {
@@ -144,6 +190,26 @@ export default {
         outline: none;
         width: 100%;
         line-height: 30px;
+    }
+    .vue-t-select-close {
+        cursor: pointer;
+        background: rgb(235, 235, 235);
+        color: #a1a1a1;
+        border-radius: 12px;
+        line-height: 16px;
+        text-align: center;
+        height: 16px;
+        width: 16px;
+        font-size: 14px;
+        padding: 1px;
+        top: 0;
+        bottom: 0;
+        right: 10px;
+        margin: auto;
+        position: absolute;
+    }
+    .vue-t-select-close::before {
+        content: "\2716";
     }
     .vue-t-select-focus {
         border: 1px solid rgb(9, 169, 197);
