@@ -9,7 +9,7 @@ import Tselect from './vue-t-select'
 export default {
     data () {
         return {
-            value: '',
+            value: 'aa6aa',
             options: [
                 {value: 'aaa', label: 'asdasd'},
                 {value: 'aa6aa', label: 'asdasd1'},

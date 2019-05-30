@@ -6,34 +6,28 @@ const FOLD_FOCUS = 'FOLD_FOCUS'
 const UNFOLD_FOCUS = 'UNFOLD_FOCUS'
 
 const config = {
-    INITIAL (that) {
-        that.state = FOLD
+    INITIAL () {
+        this.state = FOLD
     },
     [UNFOLD_FOCUS]: {
-        OUT (that) {
-            that.state = FOLD
+        OUT () {
+            this.state = FOLD
         },
-        IN (that) {
-            that.state = FOLD_FOCUS
+        IN () {
+            this.state = FOLD_FOCUS
         },
-        SELECT (that) {
-            that.state = FOLD_FOCUS
+        SELECT () {
+            this.state = FOLD_FOCUS
         }
     },
     [FOLD]: {
-        IN (that, func) {
-            that.state = UNFOLD_FOCUS
-            const eventListener = () => {
-                that.state = FOLD
-                typeof func === 'function' && func()
-                document.removeEventListener('click', eventListener)
-            }
-            document.addEventListener('click', eventListener)
+        IN () {
+            this.state = UNFOLD_FOCUS
         }
     },
     [FOLD_FOCUS]: {
-        IN (that) {
-            that.state = UNFOLD_FOCUS
+        IN () {
+            this.state = UNFOLD_FOCUS
         }
     }
 }
@@ -74,33 +68,37 @@ export default {
         }
     },
     data() {
+        const selected = this.options.filter(item => item.value === this.value)
         return {
             displayOptions: this.options,
             showClose: false,
             state: FOLD,
-            selected: {value: '', label: ''},
-            inputLabel: ''
+            selected: selected.length ? selected[0] : {value: '', label: ''},
+            inputLabel: selected.length ? selected[0].label : ''
         };
     },
     methods: {
         handleClick () {
-            const args = [
-                this,
-                this.state === FOLD ? () => {
+            const { state } = this
+            config[state].IN.apply(this)
+            if (state === FOLD) {
+                const eventListener = () => {
+                    config[UNFOLD_FOCUS].OUT.apply(this)
                     this.inputLabel = this.selected.label
                     this.displayOptions = this.options
-                } : ''
-            ]
-            config[this.state].IN.apply(null, args)
+                    document.removeEventListener('click', eventListener)
+                }
+                document.addEventListener('click', eventListener)
+            }
             event.stopPropagation()
         },
         selectItem (value) {
-            config[this.state].SELECT(this)
+            config[this.state].SELECT.apply(this)
             this.changeSelected(value)
             event.stopPropagation()
         },
         clearItem () {
-            config.INITIAL(this)
+            config.INITIAL.apply(this)
             const item = {value: '', label: ''}
             this.changeSelected(item)
             this.displayOptions = this.options
@@ -135,7 +133,7 @@ export default {
                         ref="input"
                         readonly={!filterable}/>
                     <span
-                        v-show={showClose && clearable}
+                        v-show={showClose && clearable && inputLabel !== ''}
                         class="vue-t-select-close"
                         onClick={() => this.clearItem()}></span>
                 </div>
