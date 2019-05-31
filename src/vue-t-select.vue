@@ -1,3 +1,38 @@
+<template>
+    <div class="vue-t-select-w">
+        <div
+            class="vue-t-select"
+            :class="state.includes('FOCUS') ? 'vue-t-select-focus' : ''"
+            @click="handleClick"
+            @mouseover="showClose = true"
+            @mouseout="showClose = false">
+            <input
+                type="text"
+                @input="filterOptions"
+                :value="inputLabel"
+                :placeholder="placeholder"
+                ref="input"
+                :readonly="!filterable"/>
+            <span
+                v-show="showClose && clearable && inputLabel !== ''"
+                class="vue-t-select-close"
+                @click="clearItem"></span>
+        </div>
+        <transition name="vue-t-transition">
+        <ul v-if="state.includes('UNFOLD')" class="vue-t-select-dropdown">
+                <li
+                    v-for="item in displayOptions"
+                    :key="item.value"
+                    :class="selected.value === item.value ? 'vue-t-select-highlight' : ''"
+                    @click="selectItem(item)">
+                    {{item.label}}
+                </li>
+            <li v-if="!displayOptions.length">暂无数据</li>
+        </ul>
+        </transition>
+    </div>
+</template>
+
 <script>
 const FOLD = 'FOLD'
 const FOCUS = 'FOCUS'
@@ -116,44 +151,44 @@ export default {
             this.displayOptions = this.options.filter(item => item.label.includes(value))
         }
     },
-    render () {
-        const {selected, inputLabel, state, displayOptions, showClose, clearable, placeholder, filterable} = this
-        return (
-            <div class="vue-t-select-w">
-                <div
-                    class={["vue-t-select", state.includes(FOCUS) ? 'vue-t-select-focus' : '']}
-                    onClick={this.handleClick}
-                    onmouseover={() => {this.showClose = true}}
-                    onmouseout={() => {this.showClose = false}}>
-                    <input
-                        type="text"
-                        onInput={this.filterOptions}
-                        value={inputLabel}
-                        placeholder={placeholder}
-                        ref="input"
-                        readonly={!filterable}/>
-                    <span
-                        v-show={showClose && clearable && inputLabel !== ''}
-                        class="vue-t-select-close"
-                        onClick={() => this.clearItem()}></span>
-                </div>
-                <transition name="vue-t-transition">
-                    {state.includes(UNFOLD) &&
-                        <ul class="vue-t-select-dropdown">
-                            { displayOptions.map(item =>
-                                <li
-                                    class={[selected.value === item.value ? 'vue-t-select-highlight' : '']}
-                                    onClick={() => this.selectItem(item)}>
-                                    {item.label}
-                                </li>
-                            )}
-                            { !displayOptions.length && <li>暂无数据</li> }
-                        </ul>
-                    }
-                </transition>
-            </div>
-        )
-    }
+    // render (h) {
+    //     const {selected, inputLabel, state, displayOptions, showClose, clearable, placeholder, filterable} = this
+    //     return (
+    //         <div class="vue-t-select-w">
+    //             <div
+    //                 class={["vue-t-select", state.includes(FOCUS) ? 'vue-t-select-focus' : '']}
+    //                 onClick={this.handleClick}
+    //                 onmouseover={() => {this.showClose = true}}
+    //                 onmouseout={() => {this.showClose = false}}>
+    //                 <input
+    //                     type="text"
+    //                     onInput={this.filterOptions}
+    //                     value={inputLabel}
+    //                     placeholder={placeholder}
+    //                     ref="input"
+    //                     readonly={!filterable}/>
+    //                 <span
+    //                     v-show={showClose && clearable && inputLabel !== ''}
+    //                     class="vue-t-select-close"
+    //                     onClick={() => this.clearItem()}></span>
+    //             </div>
+    //             <transition name="vue-t-transition">
+    //                 {state.includes(UNFOLD) &&
+    //                     <ul class="vue-t-select-dropdown">
+    //                         { displayOptions.map(item =>
+    //                             <li
+    //                                 class={[selected.value === item.value ? 'vue-t-select-highlight' : '']}
+    //                                 onClick={() => this.selectItem(item)}>
+    //                                 {item.label}
+    //                             </li>
+    //                         )}
+    //                         { !displayOptions.length && <li>暂无数据</li> }
+    //                     </ul>
+    //                 }
+    //             </transition>
+    //         </div>
+    //     )
+    // }
 }
 </script>
 
