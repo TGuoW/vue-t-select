@@ -6,17 +6,25 @@
             @click="handleClick"
             @mouseover="showClose = true"
             @mouseout="showClose = false">
-            <input
-                type="text"
-                @input="filterOptions"
-                :value="inputLabel"
-                :placeholder="placeholder"
-                ref="input"
-                :readonly="!filterable"/>
-            <span
-                v-show="showClose && clearable && inputLabel !== ''"
-                class="vue-t-select-close"
-                @click="clearItem"></span>
+            <span class="prepend" v-if="$slots.prepend">
+                <slot name="prepend"></slot>
+            </span>
+            <div class="content">
+                <input
+                    type="text"
+                    @input="filterOptions"
+                    :value="inputLabel"
+                    :placeholder="placeholder"
+                    ref="input"
+                    :readonly="!filterable"/>
+                <span
+                    v-show="showClose && clearable && inputLabel !== ''"
+                    class="vue-t-select-close"
+                    @click="clearItem"></span>
+            </div>
+            <span class="append" v-if="$slots.append">
+                <slot name="append"></slot>
+            </span>
         </div>
         <transition name="vue-t-transition">
         <ul v-if="state.includes('UNFOLD')" class="vue-t-select-dropdown">
@@ -204,25 +212,47 @@ export default {
 
     .vue-t-select-w {
         position: relative;
-        width: 240px;
+        width: 300px;
     }
     .vue-t-select {
-        display: block;
-        width: 240px;
+        display: flex;
         height: 40px;
         border: 1px solid #ccc;
         border-radius: 4px;
-        text-align: center;
-        padding: 4px;
         box-sizing: border-box;
         text-align: left;
+        font-size: 16px;
+        overflow: hidden;
     }
     .vue-t-select input {
+        padding: 0 16px;
+    }
+    .vue-t-select .prepend {
+        color: #909399;
+        padding: 0 16px;
+        line-height: 38px;
+        background: #f5f7fa;
+        border-right: 1px solid #dcdfe6;
+    }
+    .vue-t-select .append {
+        color: #909399;
+        padding: 0 16px;
+        line-height: 38px;
+        background: #f5f7fa;
+        border-left: 1px solid #dcdfe6;
+    }
+    .vue-t-select input {
+        box-sizing: border-box;
+        width: 100%;
         font-size: 16px;
         border: none;
         outline: none;
-        width: 100%;
-        line-height: 30px;
+        line-height: 38px;
+    }
+    .vue-t-select .content {
+        height: 100%;
+        flex: 1;
+        position: relative;
     }
     .vue-t-select-close {
         cursor: pointer;
@@ -250,7 +280,7 @@ export default {
     .vue-t-select-dropdown {
         position: absolute;
         left: 0;
-        min-width: 240px;
+        min-width: 300px;
         max-height: 440px;
         overflow: auto;
         border: 1px solid #ccc;

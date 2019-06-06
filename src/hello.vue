@@ -1,6 +1,7 @@
 <template>
     <div>
-        <Tselect v-model="value" :options="options" clearable placeholder="123" filterable></Tselect>
+        <Tselect v-model="value" :options="options" clearable placeholder="123" filterable>
+        </Tselect>
     </div>
 </template>
 
