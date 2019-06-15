@@ -74,12 +74,13 @@ export default {
         }
     },
     data() {
+        let selected = this.options.filter(item => item.value === this.value)
         return {
             displayOptions: this.options,
             showClose: false,
             state: FOLD,
-            selected: {value: '', label: ''},
-            inputLabel: ''
+            selected: selected.length ? selected[0] : {value: '', label: ''},
+            inputLabel: selected.length ? selected[0].label : ''
         };
     },
     methods: {
@@ -210,6 +211,9 @@ export default {
     }
     .vue-t-select-close::before {
         content: "\2716";
+    }
+    .vue-t-select-close:hover {
+        background: rgb(216, 216, 216);
     }
     .vue-t-select-focus {
         border: 1px solid rgb(9, 169, 197);
