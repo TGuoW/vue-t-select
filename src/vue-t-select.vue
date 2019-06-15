@@ -43,8 +43,8 @@
 
 <script>
 const FOLD = 'FOLD'
-const FOCUS = 'FOCUS'
-const UNFOLD = 'UNFOLD'
+// const FOCUS = 'FOCUS'
+// const UNFOLD = 'UNFOLD'
 const FOLD_FOCUS = 'FOLD_FOCUS'
 const UNFOLD_FOCUS = 'UNFOLD_FOCUS'
 
@@ -145,6 +145,7 @@ export default {
             const item = {value: '', label: ''}
             this.changeSelected(item)
             this.displayOptions = this.options
+            this.$emit('clear')
             event.stopPropagation()
         },
         changeSelected (item) {
@@ -283,7 +284,8 @@ export default {
     .vue-t-select-dropdown {
         position: absolute;
         left: 0;
-        min-width: 300px;
+        /* min-width: 300px; */
+        width: 100%;
         max-height: 440px;
         overflow: auto;
         border: 1px solid #ccc;
