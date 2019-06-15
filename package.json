@@ -1,6 +1,6 @@
 {
   "name": "vue-t-select",
-  "version": "1.0.0",
+  "version": "1.0.3",
   "description": "",
 
   "main": "dist/vue-t-select.ssr.js",

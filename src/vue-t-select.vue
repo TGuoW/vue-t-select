@@ -1,3 +1,46 @@
+<template>
+    <div class="vue-t-select-w">
+        <div
+            class="vue-t-select"
+            :class="state.includes('FOCUS') ? 'vue-t-select-focus' : ''"
+            @click="handleClick"
+            @mouseover="showClose = true"
+            @mouseout="showClose = false">
+            <span class="prepend" v-if="$slots.prepend">
+                <slot name="prepend"></slot>
+            </span>
+            <div class="content">
+                <input
+                    type="text"
+                    @input="filterOptions"
+                    :value="inputLabel"
+                    :placeholder="placeholder"
+                    ref="input"
+                    :readonly="!filterable"/>
+                <span
+                    v-show="showClose && clearable && inputLabel !== ''"
+                    class="vue-t-select-close"
+                    @click="clearItem"></span>
+            </div>
+            <span class="append" v-if="$slots.append">
+                <slot name="append"></slot>
+            </span>
+        </div>
+        <transition name="vue-t-transition">
+        <ul v-if="state.includes('UNFOLD')" class="vue-t-select-dropdown">
+                <li
+                    v-for="item in displayOptions"
+                    :key="item.value"
+                    :class="selected.value === item.value ? 'vue-t-select-highlight' : ''"
+                    @click="selectItem(item)">
+                    {{item.label}}
+                </li>
+            <li v-if="!displayOptions.length">暂无数据</li>
+        </ul>
+        </transition>
+    </div>
+</template>
+
 <script>
 const FOLD = 'FOLD'
 const FOCUS = 'FOCUS'
@@ -6,34 +49,28 @@ const FOLD_FOCUS = 'FOLD_FOCUS'
 const UNFOLD_FOCUS = 'UNFOLD_FOCUS'
 
 const config = {
-    INITIAL (that) {
-        that.state = FOLD
+    INITIAL () {
+        this.state = FOLD
     },
     [UNFOLD_FOCUS]: {
-        OUT (that) {
-            that.state = FOLD
+        OUT () {
+            this.state = FOLD
         },
-        IN (that) {
-            that.state = FOLD_FOCUS
+        IN () {
+            this.state = FOLD_FOCUS
         },
-        SELECT (that) {
-            that.state = FOLD_FOCUS
+        SELECT () {
+            this.state = FOLD_FOCUS
         }
     },
     [FOLD]: {
-        IN (that, func) {
-            that.state = UNFOLD_FOCUS
-            const eventListener = () => {
-                that.state = FOLD
-                typeof func === 'function' && func()
-                document.removeEventListener('click', eventListener)
-            }
-            document.addEventListener('click', eventListener)
+        IN () {
+            this.state = UNFOLD_FOCUS
         }
     },
     [FOLD_FOCUS]: {
-        IN (that) {
-            that.state = UNFOLD_FOCUS
+        IN () {
+            this.state = UNFOLD_FOCUS
         }
     }
 }
@@ -74,7 +111,7 @@ export default {
         }
     },
     data() {
-        let selected = this.options.filter(item => item.value === this.value)
+        const selected = this.options.filter(item => item.value === this.value)
         return {
             displayOptions: this.options,
             showClose: false,
@@ -85,23 +122,26 @@ export default {
     },
     methods: {
         handleClick () {
-            const args = [
-                this,
-                this.state === FOLD ? () => {
+            const { state } = this
+            config[state].IN.apply(this)
+            if (state === FOLD) {
+                const eventListener = () => {
+                    config[UNFOLD_FOCUS].OUT.apply(this)
                     this.inputLabel = this.selected.label
                     this.displayOptions = this.options
-                } : ''
-            ]
-            config[this.state].IN.apply(null, args)
+                    document.removeEventListener('click', eventListener)
+                }
+                document.addEventListener('click', eventListener)
+            }
             event.stopPropagation()
         },
         selectItem (value) {
-            config[this.state].SELECT(this)
+            config[this.state].SELECT.apply(this)
             this.changeSelected(value)
             event.stopPropagation()
         },
         clearItem () {
-            config.INITIAL(this)
+            config.INITIAL.apply(this)
             const item = {value: '', label: ''}
             this.changeSelected(item)
             this.displayOptions = this.options
@@ -119,44 +159,44 @@ export default {
             this.displayOptions = this.options.filter(item => item.label.includes(value))
         }
     },
-    render () {
-        const {selected, inputLabel, state, displayOptions, showClose, clearable, placeholder, filterable} = this
-        return (
-            <div class="vue-t-select-w">
-                <div
-                    class={["vue-t-select", state.includes(FOCUS) ? 'vue-t-select-focus' : '']}
-                    onClick={this.handleClick}
-                    onmouseover={() => {this.showClose = true}}
-                    onmouseout={() => {this.showClose = false}}>
-                    <input
-                        type="text"
-                        onInput={this.filterOptions}
-                        value={inputLabel}
-                        placeholder={placeholder}
-                        ref="input"
-                        readonly={!filterable}/>
-                    <span
-                        v-show={showClose && clearable}
-                        class="vue-t-select-close"
-                        onClick={() => this.clearItem()}></span>
-                </div>
-                <transition name="vue-t-transition">
-                    {state.includes(UNFOLD) &&
-                        <ul class="vue-t-select-dropdown">
-                            { displayOptions.map(item =>
-                                <li
-                                    class={[selected.value === item.value ? 'vue-t-select-highlight' : '']}
-                                    onClick={() => this.selectItem(item)}>
-                                    {item.label}
-                                </li>
-                            )}
-                            { !displayOptions.length && <li>暂无数据</li> }
-                        </ul>
-                    }
-                </transition>
-            </div>
-        )
-    }
+    // render (h) {
+    //     const {selected, inputLabel, state, displayOptions, showClose, clearable, placeholder, filterable} = this
+    //     return (
+    //         <div class="vue-t-select-w">
+    //             <div
+    //                 class={["vue-t-select", state.includes(FOCUS) ? 'vue-t-select-focus' : '']}
+    //                 onClick={this.handleClick}
+    //                 onmouseover={() => {this.showClose = true}}
+    //                 onmouseout={() => {this.showClose = false}}>
+    //                 <input
+    //                     type="text"
+    //                     onInput={this.filterOptions}
+    //                     value={inputLabel}
+    //                     placeholder={placeholder}
+    //                     ref="input"
+    //                     readonly={!filterable}/>
+    //                 <span
+    //                     v-show={showClose && clearable && inputLabel !== ''}
+    //                     class="vue-t-select-close"
+    //                     onClick={() => this.clearItem()}></span>
+    //             </div>
+    //             <transition name="vue-t-transition">
+    //                 {state.includes(UNFOLD) &&
+    //                     <ul class="vue-t-select-dropdown">
+    //                         { displayOptions.map(item =>
+    //                             <li
+    //                                 class={[selected.value === item.value ? 'vue-t-select-highlight' : '']}
+    //                                 onClick={() => this.selectItem(item)}>
+    //                                 {item.label}
+    //                             </li>
+    //                         )}
+    //                         { !displayOptions.length && <li>暂无数据</li> }
+    //                     </ul>
+    //                 }
+    //             </transition>
+    //         </div>
+    //     )
+    // }
 }
 </script>
 
@@ -172,25 +212,47 @@ export default {
 
     .vue-t-select-w {
         position: relative;
-        width: 240px;
+        width: 300px;
     }
     .vue-t-select {
-        display: block;
-        width: 240px;
+        display: flex;
         height: 40px;
         border: 1px solid #ccc;
         border-radius: 4px;
-        text-align: center;
-        padding: 4px;
         box-sizing: border-box;
         text-align: left;
+        font-size: 16px;
+        overflow: hidden;
     }
     .vue-t-select input {
+        padding: 0 16px;
+    }
+    .vue-t-select .prepend {
+        color: #909399;
+        padding: 0 16px;
+        line-height: 38px;
+        background: #f5f7fa;
+        border-right: 1px solid #dcdfe6;
+    }
+    .vue-t-select .append {
+        color: #909399;
+        padding: 0 16px;
+        line-height: 38px;
+        background: #f5f7fa;
+        border-left: 1px solid #dcdfe6;
+    }
+    .vue-t-select input {
+        box-sizing: border-box;
+        width: 100%;
         font-size: 16px;
         border: none;
         outline: none;
-        width: 100%;
-        line-height: 30px;
+        line-height: 38px;
+    }
+    .vue-t-select .content {
+        height: 100%;
+        flex: 1;
+        position: relative;
     }
     .vue-t-select-close {
         cursor: pointer;
@@ -221,7 +283,7 @@ export default {
     .vue-t-select-dropdown {
         position: absolute;
         left: 0;
-        min-width: 240px;
+        min-width: 300px;
         max-height: 440px;
         overflow: auto;
         border: 1px solid #ccc;
