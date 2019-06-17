@@ -29,11 +29,11 @@
         <transition name="vue-t-transition">
         <ul v-if="state.includes('UNFOLD')" class="vue-t-select-dropdown">
                 <li
-                    v-for="item in displayOptions"
+                    v-for="(item, index) in displayOptions"
                     :key="item.value"
                     :class="selected.value === item.value ? 'vue-t-select-highlight' : ''"
-                    @click="selectItem(item)">
-                    {{item.label}}
+                    @click="selectItem(options[index])"
+                    v-html="item.label">
                 </li>
             <li v-if="!displayOptions.length">暂无数据</li>
         </ul>
@@ -157,7 +157,17 @@ export default {
         filterOptions (e) {
             const value = e.target.value
             this.inputLabel = value
-            this.displayOptions = this.options.filter(item => item.label.includes(value))
+            const reg = new RegExp(`\(${value}\)`);
+
+            this.displayOptions = this.options.reduce((res, cur) => {
+                if (reg.test(cur.label)) {
+                    const obj = {...cur}
+                    const match = RegExp.$1
+                    obj.label = obj.label.replace(match, '<span style="color: #1f1f39;">$&</span>')
+                    res.push(obj)
+                }
+                return res
+            }, [])
         }
     },
     // render (h) {
