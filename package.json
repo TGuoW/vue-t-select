@@ -1,8 +1,7 @@
 {
   "name": "vue-t-select",
-  "version": "1.0.3",
-  "description": "",
-
+  "version": "1.0.5",
+  "description": "A select component",
   "main": "dist/vue-t-select.ssr.js",
   "module": "dist/vue-t-select.esm.js",
   "unpkg": "dist/vue-t-select.min.js",
@@ -19,8 +18,7 @@
     "build:unpkg": "cross-env NODE_ENV=production rollup --config build/rollup.config.js --format iife"
   },
 
-  "dependencies": {
-  },
+  "dependencies": {},
 
   "devDependencies": {
     "cross-env": "^5.2.0",
